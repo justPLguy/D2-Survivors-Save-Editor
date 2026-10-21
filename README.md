@@ -79,7 +79,7 @@ The GUI version uses Python's built-in Tkinter library and does not require addi
 Created by **Just a Polish Guy**.
 
 - GitHub: https://github.com/justPLguy
-- YouTube: https://www.youtube.com/watch?v=Mg8NvlDRU30
+- YouTube: [https://www.youtube.com/watch?v=Mg8NvlDRU30](https://www.youtube.com/@justPLguy)
 
 ## Project Links
 
