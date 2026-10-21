@@ -37,3 +37,12 @@ Created by **Just a Polish Guy**.
 
 - GitHub: https://github.com/justPLguy/D2-Survivors-Save-Editor
 - YouTube tutorial: https://www.youtube.com/watch?v=Mg8NvlDRU30
+
+## Project Links
+
+- **Main Repository — D2 Survivors Save Editor:** https://github.com/justPLguy/D2-Survivors-Save-Editor
+- **Add Gold — No GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
+- **Item & Gold Editor — GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/item-gold-editor-gui
+- **YouTube — Just a Polish Guy:** https://www.youtube.com/@justPLguy
+
+Visit the main repository to explore the available tools. Check out the YouTube channel for tutorials, updates and more gaming projects.
