@@ -3,20 +3,28 @@ import json
 import zlib
 from pathlib import Path
 
-# D2 Survivors - Save Editor
+# D2 Survivors Save Editor — Add Gold (No GUI)
+# Created by Just a Polish Guy
+# Unofficial community-made tool. Always back up your save.
+
 SAVE_CODE = """
 PASTE YOUR SAVE CODE HERE
 """.strip()
 
 
 def main():
-    print("=" * 42)
-    print(" D2 SURVIVORS - SAVE EDITOR")
-    print("=" * 42)
+    print("=" * 48)
+    print(" D2 SURVIVORS - ADD GOLD EDITOR")
+    print(" Created by Just a Polish Guy")
+    print("=" * 48)
+    print("Unofficial community tool — use at your own risk.")
+    print()
 
     try:
         if not SAVE_CODE.startswith("D2S1:"):
-            raise ValueError("Invalid save-code prefix.")
+            raise ValueError(
+                "Invalid save-code prefix. Replace SAVE_CODE with your full D2S1: save code."
+            )
 
         encoded = SAVE_CODE[len("D2S1:"):]
         encoded += "=" * (-len(encoded) % 4)
@@ -30,8 +38,7 @@ def main():
         if "gold" not in data:
             available_fields = ", ".join(data.keys())
             raise ValueError(
-                f"Could not find the 'gold' field. Available fields: "
-                f"{available_fields}"
+                f"Could not find the 'gold' field. Available fields: {available_fields}"
             )
 
         print("Save loaded successfully.")
@@ -39,7 +46,6 @@ def main():
         print("Save version:", data.get("version", "unknown"))
 
         new_gold = int(input("Enter the desired amount of gold: "))
-
         if new_gold < 0:
             raise ValueError("Gold cannot be negative.")
 
@@ -70,6 +76,9 @@ def main():
         print("ERROR:", error)
         print("The original save has not been modified.")
 
+    print()
+    print("Credits: Just a Polish Guy")
+    print("GitHub: https://github.com/justPLguy/D2-Survivors-Save-Editor")
     input("\nPress Enter to exit...")
 
 
