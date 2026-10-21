@@ -8,7 +8,8 @@ The project currently focuses on two versions of the editor: a lightweight comma
 
 ## 🛠️ Available Tools
 
-### 1. Add Gold — No GUI / LINK - https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
+### 1. Add Gold — No GUI / 
+LINK - https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
 
 **Branch:** `add-gold-no-gui`
 
@@ -23,6 +24,7 @@ Features:
 **Best for:** Players who want a lightweight, straightforward tool.
 
 ### 2. Item & Gold Editor — GUI
+LINK - [https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui](https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/item-gold-editor-gui)
 
 **Branch:** `item-gold-editor-gui`
 
