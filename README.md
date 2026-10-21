@@ -1,3 +1,17 @@
+## 🎥 Video Tutorial
+
+**Watch the video to see how the D2 Survivors Gold Editor works and how to use it.**
+
+▶️ [Watch on YouTube](https://www.youtube.com/watch?v=Mg8NvlDRU30)
+
+## 🛠️ Download
+
+Get the free editor and follow the setup instructions in this repository.
+
+👉 [Download the Gold Editor](https://github.com/justPLguy/D2-Survivors-Gold-Editor/blob/main/editor.py.txt)
+
+⚠️ Always back up your original save before making changes.
+
 # D2 Survivors Save Editor
 
 A simple, free Python tool for editing the **between-run gold value** in a local D2 Survivors save.
