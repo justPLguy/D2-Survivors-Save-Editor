@@ -49,3 +49,13 @@ A graphical save editor for **D2 Survivors**. Edit shared gold and modifiers on 
 Created and maintained by **Just a Polish Guy**.
 
 This is an unofficial community-made project. It is not affiliated with or endorsed by the creators of D2 Survivors or Blizzard Entertainment. Use it at your own risk.
+
+
+## Project Links
+
+- **Main Repository — D2 Survivors Save Editor:** https://github.com/justPLguy/D2-Survivors-Save-Editor
+- **Add Gold — No GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
+- **Item & Gold Editor — GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/item-gold-editor-gui
+- **YouTube — Just a Polish Guy:** https://www.youtube.com/@justPLguy
+
+Visit the main repository to explore the available tools. Check out the YouTube channel for tutorials, updates and more gaming projects.
