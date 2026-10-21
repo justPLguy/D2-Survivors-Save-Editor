@@ -8,10 +8,11 @@ The project currently focuses on two versions of the editor: a lightweight comma
 
 ## 🛠️ Available Tools
 
-### 1. Add Gold — No GUI / 
-LINK - https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
-
-**Branch:** `add-gold-no-gui`
+### 1. Add Gold 
+NO GUI (COMMAND) LINK - https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
+GUI LINK - https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-gui
+**NO GUI Branch:** `add-gold-no-gui`
+**GUI Branch:** `add-gold-gui`
 
 A simple Python tool for players who want to change their saved gold without using a graphical interface.
 
@@ -85,6 +86,7 @@ Created by **Just a Polish Guy**.
 
 - **Main Repository — D2 Survivors Save Editor:** https://github.com/justPLguy/D2-Survivors-Save-Editor
 - **Add Gold — No GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-no-gui
+- **Add gold GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/add-gold-gui
 - **Item & Gold Editor — GUI:** https://github.com/justPLguy/D2-Survivors-Save-Editor/tree/item-gold-editor-gui
 - **YouTube — Just a Polish Guy:** https://www.youtube.com/@justPLguy
 
