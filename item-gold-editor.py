@@ -65,10 +65,52 @@ def class_entries(data):
 
 
 def equipped_items_for_class(data, class_key):
-    root = class_entries(data).get(class_key)
-    if root is None:
-        return []
-    return walk_items(root, ("equippedByClass", class_key))
+    # Regular character equipment
+    if not str(class_key).startswith("__merc__|"):
+        root = class_entries(data).get(class_key)
+        if root is None:
+            return []
+        return walk_items(root, ("equippedByClass", class_key))
+
+    # Mercenary equipment is stored separately under mercs -> owner class -> hired -> merc type -> worn.
+    _, owner_class, merc_type = str(class_key).split("|", 2)
+    merc_root = (
+        data.get("mercs", {})
+            .get(owner_class, {})
+            .get("hired", {})
+            .get(merc_type, {})
+            .get("worn", {})
+    )
+    return walk_items(merc_root, ("mercs", owner_class, "hired", merc_type, "worn"))
+
+
+def inventory_items_for_class(data, class_key):
+    """Return unequipped character inventory items for the selected class."""
+    if str(class_key).startswith("__merc__|"):
+        # Mercenary inventory is not exposed by the current save schema. If a
+        # future save contains one, detect it without assuming its shape.
+        _, owner_class, merc_type = str(class_key).split("|", 2)
+        merc = (
+            data.get("mercs", {})
+                .get(owner_class, {})
+                .get("hired", {})
+                .get(merc_type, {})
+        )
+        inventory_root = merc.get("inventory", {}) if isinstance(merc, dict) else {}
+        return walk_items(inventory_root, ("mercs", owner_class, "hired", merc_type, "inventory"))
+
+    root = data.get("inventoryByClass", {})
+    class_inventory = root.get(class_key, []) if isinstance(root, dict) else []
+    return walk_items(class_inventory, ("inventoryByClass", class_key))
+
+
+def class_display_name(data, class_key):
+    if str(class_key).startswith("__merc__|"):
+        _, owner_class, merc_type = str(class_key).split("|", 2)
+        merc = data.get("mercs", {}).get(owner_class, {}).get("hired", {}).get(merc_type, {})
+        merc_name = merc.get("name", merc_type)
+        return f"{pretty_class(owner_class)} — Mercenary ({merc_type.title()}, {merc_name})"
+    return pretty_class(class_key)
 
 
 def pretty_stat(stat):
@@ -86,7 +128,7 @@ def pretty_class(class_key):
 class SaveEditor(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("D2 Survivors Save Editor v6.1")
+        self.title("D2 Survivors Save Editor v6.4 — Inventory & Mercenary Equipment")
         self.geometry("1080x820")
         self.minsize(900, 760)
         self.data = None
@@ -105,7 +147,7 @@ class SaveEditor(tk.Tk):
         ttk.Label(root, text="D2 Survivors Save Editor", font=("Segoe UI", 18, "bold")).pack(anchor="w")
         ttk.Label(
             root,
-            text="Edit gold and equipped item modifiers for each character class.",
+            text="Edit gold, equipped items, inventory items, and mercenary equipment modifiers.",
             foreground="#555"
         ).pack(anchor="w", pady=(2, 12))
 
@@ -137,14 +179,38 @@ class SaveEditor(tk.Tk):
         left_frame = ttk.Frame(main_frame)
         left_frame.pack(side="left", fill="y", padx=(0, 12))
 
-        class_frame = ttk.LabelFrame(left_frame, text="2. Character class", padding=8)
-        class_frame.pack(fill="x", pady=(0, 10))
-        self.class_list = tk.Listbox(class_frame, width=25, height=6, exportselection=False)
-        self.class_list.pack(fill="x")
+        selectors_frame = ttk.Frame(left_frame)
+        selectors_frame.pack(fill="x", pady=(0, 10))
+
+        class_frame = ttk.LabelFrame(selectors_frame, text="2. Character", padding=6)
+        class_frame.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        self.class_list = tk.Listbox(class_frame, width=19, height=6, exportselection=False)
+        self.class_list.pack(fill="both", expand=True)
         self.class_list.bind("<<ListboxSelect>>", self.on_class_select)
 
-        item_frame = ttk.LabelFrame(left_frame, text="3. Equipped items", padding=8)
+        merc_frame = ttk.LabelFrame(selectors_frame, text="3. Assigned mercenary", padding=6)
+        merc_frame.pack(side="left", fill="both", expand=True, padx=(5, 0))
+        self.merc_list = tk.Listbox(merc_frame, width=23, height=6, exportselection=False)
+        self.merc_list.pack(fill="both", expand=True)
+        self.merc_list.bind("<<ListboxSelect>>", self.on_merc_select)
+
+        item_frame = ttk.LabelFrame(left_frame, text="4. Items", padding=8)
         item_frame.pack(fill="both", expand=True)
+
+        source_row = ttk.Frame(item_frame)
+        source_row.pack(fill="x", pady=(0, 6))
+        ttk.Label(source_row, text="Show:").pack(side="left")
+        self.item_source_var = tk.StringVar(value="Equipped")
+        self.item_source_combo = ttk.Combobox(
+            source_row,
+            textvariable=self.item_source_var,
+            values=("Equipped", "Inventory"),
+            state="readonly",
+            width=13,
+        )
+        self.item_source_combo.pack(side="left", padx=(6, 0))
+        self.item_source_combo.bind("<<ComboboxSelected>>", self.on_item_source_change)
+
         self.item_list = tk.Listbox(item_frame, width=35, height=16, exportselection=False)
         self.item_list.pack(side="left", fill="both", expand=True)
         self.item_list.bind("<<ListboxSelect>>", self.on_item_select)
@@ -152,7 +218,7 @@ class SaveEditor(tk.Tk):
         item_scroll.pack(side="right", fill="y")
         self.item_list.configure(yscrollcommand=item_scroll.set)
 
-        mod_frame = ttk.LabelFrame(main_frame, text="4. Selected item modifiers", padding=10)
+        mod_frame = ttk.LabelFrame(main_frame, text="5. Selected item modifiers", padding=10)
         mod_frame.pack(side="left", fill="both", expand=True)
         self.mod_canvas = tk.Canvas(mod_frame, highlightthickness=0)
         self.mod_scroll = ttk.Scrollbar(mod_frame, orient="vertical", command=self.mod_canvas.yview)
@@ -211,6 +277,7 @@ class SaveEditor(tk.Tk):
     def clear_all(self):
         self.save_text.delete("1.0", "end")
         self.class_list.delete(0, "end")
+        self.merc_list.delete(0, "end")
         self.item_list.delete(0, "end")
         for child in self.mod_inner.winfo_children():
             child.destroy()
@@ -221,6 +288,7 @@ class SaveEditor(tk.Tk):
         self.selected_item_index = None
         self.modifier_vars = []
         self.gold_var.set("")
+        self.item_source_var.set("Equipped")
         self.output_code = None
         self.status_var.set("Cleared. Paste a save code to begin.")
 
@@ -234,21 +302,26 @@ class SaveEditor(tk.Tk):
 
         root = class_entries(self.data)
         self.class_keys = list(root.keys())
+
+        # Character classes stay in their own list. Mercenaries are selected
+        # in a separate adjacent list, filtered to the selected owner class.
         self.class_list.delete(0, "end")
         for key in self.class_keys:
             self.class_list.insert("end", pretty_class(key))
         self.gold_var.set(str(self.data.get("gold", "")))
+        self.merc_list.delete(0, "end")
         self.items = []
         self.selected_item_index = None
         self.modifier_vars = []
         self.item_list.delete(0, "end")
         for child in self.mod_inner.winfo_children():
             child.destroy()
-        self.status_var.set(f"Loaded successfully: {len(self.class_keys)} class(es) found.")
+        self.status_var.set(f"Loaded successfully: {len(self.class_keys)} character/equipment section(s) found.")
         if self.class_keys:
             self.class_list.selection_set(0)
             self.class_list.activate(0)
             self.current_class_key = self.class_keys[0]
+            self.refresh_merc_list()
             self.refresh_items()
 
     def on_class_select(self, event=None):
@@ -258,26 +331,87 @@ class SaveEditor(tk.Tk):
         # Save the previous item's pending edits before switching class.
         if self.selected_item_index is not None and not self.save_current_item_changes(show_message=False):
             self.class_list.selection_clear(0, "end")
-            self.class_list.selection_set(self.class_keys.index(self.current_class_key))
+            if self.current_class_key in self.class_keys:
+                self.class_list.selection_set(self.class_keys.index(self.current_class_key))
             return
         self.current_class_key = self.class_keys[selection[0]]
+        self.refresh_merc_list()
         self.refresh_items()
 
+    def refresh_merc_list(self):
+        self.merc_list.delete(0, "end")
+        if self.data is None or not self.current_class_key:
+            return
+        owner_data = self.data.get("mercs", {}).get(self.current_class_key, {})
+        hired = owner_data.get("hired", {}) if isinstance(owner_data, dict) else {}
+        if not isinstance(hired, dict) or not hired:
+            self.merc_list.insert("end", "(No mercenary)")
+            return
+        for merc_type, merc_data in hired.items():
+            merc_name = merc_data.get("name", merc_type) if isinstance(merc_data, dict) else merc_type
+            self.merc_list.insert("end", f"{merc_type.title()} — {merc_name}")
+        self.merc_list.selection_set(0)
+        self.merc_list.activate(0)
+
+    def on_merc_select(self, event=None):
+        selection = self.merc_list.curselection()
+        if not selection or self.data is None or not self.current_class_key:
+            return
+        merc_type = list(self.data.get("mercs", {}).get(self.current_class_key, {}).get("hired", {}).keys())
+        if not merc_type:
+            return
+        index = selection[0]
+        if index >= len(merc_type):
+            return
+        merc_key = f"__merc__|{self.current_class_key}|{merc_type[index]}"
+        if self.selected_item_index is not None and not self.save_current_item_changes(show_message=False):
+            self.merc_list.selection_clear(0, "end")
+            self.merc_list.selection_set(index)
+            return
+        self.current_class_key = merc_key
+        self.refresh_items()
+
+    def on_item_source_change(self, event=None):
+        if self.data is not None and self.current_class_key:
+            self.refresh_items()
+
     def refresh_items(self):
-        self.items = equipped_items_for_class(self.data, self.current_class_key)
+        source = self.item_source_var.get() if hasattr(self, "item_source_var") else "Equipped"
+        if source == "Inventory":
+            self.items = inventory_items_for_class(self.data, self.current_class_key)
+        else:
+            self.items = equipped_items_for_class(self.data, self.current_class_key)
+
         self.item_list.delete(0, "end")
-        for _, item in self.items:
-            self.item_list.insert("end", f"{get_item_name(item)}  ({len(item.get('mods', []))} mods)")
+        for path, item in self.items:
+            path_label = ""
+            if path and isinstance(path[-1], int):
+                path_label = f"  [#{path[-1] + 1}]"
+            self.item_list.insert(
+                "end",
+                f"{get_item_name(item)}{path_label}  ({len(item.get('mods', []))} mods)"
+            )
+
         for child in self.mod_inner.winfo_children():
             child.destroy()
         self.modifier_vars = []
         self.selected_item_index = None
+
         if self.items:
             self.item_list.selection_set(0)
             self.item_list.activate(0)
             self.on_item_select()
+
+        if str(self.current_class_key).startswith("__merc__|") and source == "Inventory":
+            scope_label = "mercenary inventory"
+        elif str(self.current_class_key).startswith("__merc__|"):
+            scope_label = "mercenary equipment"
+        else:
+            scope_label = "inventory" if source == "Inventory" else "equipped items"
+
         self.status_var.set(
-            f"{pretty_class(self.current_class_key)}: {len(self.items)} equipped item(s)."
+            f"{class_display_name(self.data, self.current_class_key)} — "
+            f"{scope_label}: {len(self.items)} item(s) found."
         )
 
     def on_item_select(self, event=None):
@@ -298,9 +432,14 @@ class SaveEditor(tk.Tk):
             child.destroy()
         self.modifier_vars = []
 
-        ttk.Label(self.mod_inner, text=get_item_name(item), font=("Segoe UI", 14, "bold")).grid(
-            row=0, column=0, columnspan=3, sticky="w", pady=(0, 10)
+        item_scope = self.item_source_var.get() if not str(self.current_class_key).startswith("__merc__|") else (
+            "Mercenary inventory" if self.item_source_var.get() == "Inventory" else "Mercenary equipment"
         )
+        ttk.Label(
+            self.mod_inner,
+            text=f"{get_item_name(item)} — {item_scope}",
+            font=("Segoe UI", 14, "bold")
+        ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 10))
         ttk.Label(self.mod_inner, text="Stat").grid(row=1, column=0, sticky="w", padx=(0, 10))
         ttk.Label(self.mod_inner, text="Current value").grid(row=1, column=1, sticky="w", padx=(0, 10))
         ttk.Label(self.mod_inner, text="New value").grid(row=1, column=2, sticky="w")
